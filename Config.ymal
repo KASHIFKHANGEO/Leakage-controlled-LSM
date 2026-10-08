@@ -1,0 +1,117 @@
+# ------------------------------------------------------------------
+# Configuration for the leakage-controlled LSM pipeline
+# Reproduces every table and figure from the paper.
+# ------------------------------------------------------------------
+
+data:
+  dir: data
+  samples_npz: samples_V2.npz
+  pointsplit_npz: pointsplit_V2.npz
+  # Optional (produced by gee/07c_merge_imerg.py):
+  samples_imerg_npz: samples_V2_imerg.npz
+
+# ------------------------------------------------------------------
+# Feature column indices (must match samples_V2.npz layout)
+# ------------------------------------------------------------------
+features:
+  n_x90: 90                # columns 0..89   (temporal window + change + stats)
+  n_terrain: 13            # columns 90..102 (terrain factors)
+  lithology_terrain_col: 12       # index inside terrain block
+  lithology_C_col: 102            # index inside feature set C
+  # Feature set definitions:
+  #   A = x90                       (90 cols)
+  #   B = terrain                   (13 cols)
+  #   C = [x90, terrain]            (103 cols)
+  #   E = [terrain, imerg_trigger]  (13 + 17 cols, only if samples_imerg.npz exists)
+  #   F = [x90, terrain, trigger]   (120 cols, only if samples_imerg.npz exists)
+  imerg_trigger_cols: 17
+
+# ------------------------------------------------------------------
+# Validation protocols
+# ------------------------------------------------------------------
+validation:
+  seed: 42
+  n_folds: 5
+  cell_size_deg: 0.1
+  # P3 point-split: split is precomputed in pointsplit_V2.npz (`new_split`)
+  # P4 cluster-disjoint: connected components of (point OR cell OR source_id)
+
+# ------------------------------------------------------------------
+# Models (exact hyperparameters used in the paper)
+# ------------------------------------------------------------------
+models:
+  logistic_regression:
+    C: 1.0
+    max_iter: 500
+  random_forest:
+    n_estimators: 300
+    max_depth: 8
+    max_features: sqrt
+  gradient_boosting:
+    n_estimators: 300
+    max_depth: 3
+    learning_rate: 0.05
+    subsample: 0.8
+  mlp:
+    hidden: [128, 64, 32]
+    alpha: 0.001
+    max_iter: 500
+    early_stopping: true
+  catboost:
+    iterations: 500
+    depth: 6
+    learning_rate: 0.05
+    l2_leaf_reg: 3
+  tabnet:
+    max_epochs: 200
+    patience: 30
+    batch_size: 256
+  ft_transformer:
+    n_blocks: 3
+    d_block: 192
+    n_heads: 8
+    attention_dropout: 0.2
+    ffn_dropout: 0.1
+    max_epochs: 200
+    patience: 30
+    batch_size: 256
+    lr: 1.0e-3
+    weight_decay: 1.0e-5
+  st_couplenet:
+    static_hidden: 32
+    static_out: 16
+    attn_dim: 32
+    temporal_out: 16
+    dropout: 0.2
+    lambda_grid: [0.0, 0.01, 0.05, 0.2]
+    max_epochs: 200
+    patience: 20
+    batch_size: 128
+    lr: 1.0e-3
+    weight_decay: 1.0e-4
+    seeds: [42, 43, 44, 45, 46]
+
+# ------------------------------------------------------------------
+# Evaluation
+# ------------------------------------------------------------------
+evaluation:
+  threshold: 0.5
+  bootstrap_resamples: 2000
+  delong: true
+  inner_early_stop_frac: 0.15     # fraction of training fold held out for early stopping
+
+# ------------------------------------------------------------------
+# Spatial diagnostics
+# ------------------------------------------------------------------
+diagnostics:
+  variogram_pairs: 60000
+  variogram_bins_km: [0, 0.5, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30]
+  decluster_radius_km: 2.0
+
+# ------------------------------------------------------------------
+# Output
+# ------------------------------------------------------------------
+output:
+  dir: output
+  figures_subdir: figures
+  save_parquet: false
