@@ -1,40 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
+
 Leakage-Controlled Evaluation of Machine Learning Landslide Susceptibility
-===========================================================================
-Full end-to-end pipeline reproducing every table and figure from the paper.
-
-Inputs (must exist in ./data/):
-    samples_V2.npz      -- x90, terrain, y, seq, point, group, source_id,
-                           year, month, lat, lon, split, lon_block
-    pointsplit_V2.npz   -- new_split (array of "train"/"val"/"test")
-
-Optional (if samples_V2_imerg.npz exists -> feature sets E and F enabled):
-    samples_V2_imerg.npz -- same keys plus `trigger` (n, 17) and `trigger_names`
-
-Outputs (into ./output/):
-    table05_main_grid.csv          -- 8 models x 4 protocols (paper Table 5)
-    table06_featuresets.csv        -- feature sets x protocols
-    table07_ablation.csv           -- ST-CoupleNet structured ablation
-    table08_variogram.csv
-    table08_kish.csv
-    table_delong.csv
-    table_bootstrap.csv
-    fig06_roc.png                  -- ROC curves, 4 panels
-    fig07_heatmap.png              -- AUC heatmap
-    fig08_featureset_bars.png      -- terrain vs terrain+temporal
-    fig10_variogram.png
-    fig11_confusion.png            -- P3 confusion matrices, all models
-    fig_training_curves.png        -- validation-AUC curves for deep models
-    confusion_metrics_pointsplit.csv
-"""
-
-from __future__ import annotations
-import os, sys, json, math, time, warnings, logging
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
 
 import numpy as np
 import pandas as pd
